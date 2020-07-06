@@ -6,7 +6,7 @@ from tensorflow.keras import regularizers
 from tensorflow.keras.applications.inception_v3 import InceptionV3
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Dropout, Flatten
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 from absl import logging
 
 
@@ -21,6 +21,7 @@ class InceptionV3Model:
     def __init__(self, input_shape, output_shape):
         self.input_shape = input_shape
         self.output_shape = output_shape
+        self.name = 'InceptionV3'
 
     def get_model(self):
         '''Function to load InceptionV3 Model.
@@ -50,7 +51,7 @@ class InceptionV3Model:
                                 activation='softmax')(x_layer)
 
         model = Model(inputs=inception.input, outputs=predictions)
-        model.compile(optimizer=SGD(lr=0.001, momentum=0.9),
+        model.compile(optimizer=Adam(lr=0.001),
                       loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
         logging.info(model.summary())
