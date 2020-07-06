@@ -5,10 +5,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import warnings
+import tempfile
+import os
 import gc
 from collections import namedtuple
 import tensorflow as tf
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from absl import app
 from absl import flags
 from absl import logging
@@ -27,20 +29,32 @@ def train_model(params):
             None
     '''
 
-    print(params)
-    data, num_classes, data_size = data_factory.read_data(params.data_dir, 224)
+    train_data, val_data, train_size, val_size, num_classes = data_factory.read_data(
+        params.data_dir, 224)
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-    t_ds = data.repeat()
+    t_ds = train_data.repeat()
     t_ds = t_ds.batch(1)
+    t_ds = t_ds.shuffle(1)
     t_ds = t_ds.prefetch(buffer_size=AUTOTUNE)
+
+    v_ds = val_data.repeat()
+    v_ds = v_ds.batch(1)
+    v_ds = v_ds.shuffle(1)
+    v_ds = v_ds.prefetch(buffer_size=AUTOTUNE)
 
     model_architect = InceptionV3Model((224, 224, 3), num_classes)
     model = model_architect.get_model()
 
-    e_s = EarlyStopping(monitor='categorical_accuracy', mode='max', verbose=1, patience=5)
-    m_c = ModelCheckpoint('best_model.h5', monitor='categorical_accuracy',
+    print(model_architect.name)
+
+    tmpdir = tempfile.mkdtemp()
+    export_path = os.path.join(tmpdir, model_architect.name, str(1))
+
+    e_s = EarlyStopping(monitor='categorical_accuracy',
+                        mode='max', verbose=1, patience=5)
+    m_c = ModelCheckpoint(export_path+"/{epoch:02d}", monitor='categorical_accuracy',
                           mode='max', save_best_only=True, verbose=1)
 
     class MyCustomCallback(tf.keras.callbacks.Callback):
@@ -59,27 +73,21 @@ def train_model(params):
             '''
             gc.collect()
 
-    train_size = int(data_size * 0.8)
-    val_size = data_size - train_size
-
     val_steps = int(val_size/(train_size/params.steps_per_epoch))
 
-    train_data = t_ds.take(train_size)
-    val_data = t_ds.skip(train_size)
-
-    model.fit(train_data, validation_data=val_data, epochs=params.epochs,
+    model.fit(t_ds, validation_data=v_ds, epochs=params.epochs,
               steps_per_epoch=params.steps_per_epoch,
               validation_steps=val_steps, verbose=1,
               callbacks=[MyCustomCallback(), e_s, m_c])
 
-    bucket_name = params.model_dir.split('/')[2]
+    # bucket_name = params.model_dir.split('/')[2]
 
-    dir_struct = ''
-    for i in params.model_dir.split('/')[3:]:
-        dir_struct += '/'+i
+    # dir_struct = ''
+    # for i in params.model_dir.split('/')[3:]:
+    #     dir_struct += '/'+i
 
-    google_cloud_storage.upload_blob(
-        bucket_name, 'best_model.h5', dir_struct+'/best_model.h5')
+    # google_cloud_storage.upload_blob(
+    #     bucket_name, 'best_model.h5', dir_struct+'/best_model.h5')
 
 
 def _get_params_from_flags(flags_obj):
