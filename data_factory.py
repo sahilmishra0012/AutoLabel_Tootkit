@@ -3,6 +3,7 @@ Script to load data from JSON.
 '''
 import json
 import tensorflow as tf
+import random
 
 def read_jpg(path, shape, n_classes):
 
@@ -62,16 +63,27 @@ def read_data(json_data, model_shape):
         Return Value:
             Processed Tensorflow Dataset.
     '''
-
-    data = json.loads(json_data)
+    with open(json_data) as f:
+        data = json.load(f)
+    # data = json.loads(json_data)
 
     images = [(a['Image URI'], a['Label ID']) for a in data['records']]
+    ll = random.sample(images, k=len(images))
+    images = ll
+    train_size = int(len(images) * 0.8)
+    val_size = len(images) - train_size
+    train_data = images[:train_size]
+    val_data = images[train_size:]
 
     classes = set()
-    for i in images:
+    for i in train_data:
         classes.add(i[1])
+    print("Classes",classes)
 
-    img_ds = tf.data.Dataset.from_tensor_slices(images)
-    img_ds = img_ds.map(lambda x: read_jpg(x, model_shape, len(classes)))
+    train_img_ds = tf.data.Dataset.from_tensor_slices(train_data)
+    train_img_ds = train_img_ds.map(lambda x: read_jpg(x, model_shape, len(classes)))
+    
+    val_img_ds = tf.data.Dataset.from_tensor_slices(val_data)
+    val_img_ds = val_img_ds.map(lambda x: read_jpg(x, model_shape, len(classes)))
 
-    return img_ds, len(classes), len(images)
+    return train_img_ds, val_img_ds, train_size, val_size, len(classes)
