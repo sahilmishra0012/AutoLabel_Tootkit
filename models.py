@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function
 from tensorflow.keras import regularizers
 from tensorflow.keras.applications.inception_v3 import InceptionV3
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Dropout, Flatten
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D
+from tensorflow.keras.optimizers import Adam, SGD
 from absl import logging
 
 
@@ -38,9 +38,8 @@ class InceptionV3Model:
         for layer in inception.layers:
             layer.trainable = False
         x_layer = inception.output
-        x_layer = Flatten()(x_layer)
-        x_layer = Dense(1024, activation='relu',
-                        kernel_regularizer=regularizers.l2(0.005))(x_layer)
+        x_layer = GlobalAveragePooling2D()(x_layer)
+        x_layer = Dense(128, activation='relu')(x_layer)
         x_layer = Dropout(0.2)(x_layer)
 
         if self.output_shape == 2:
@@ -51,8 +50,8 @@ class InceptionV3Model:
                                 activation='softmax')(x_layer)
 
         model = Model(inputs=inception.input, outputs=predictions)
-        model.compile(optimizer=Adam(lr=0.001),
-                      loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+        model.compile(optimizer=SGD(lr=0.0001),
+                      loss='categorical_crossentropy', metrics=['accuracy'])
 
         logging.info(model.summary())
 
