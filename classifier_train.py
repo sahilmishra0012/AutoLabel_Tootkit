@@ -29,8 +29,7 @@ def train_model(params):
             None
     '''
 
-    train_data, val_data, train_size, val_size, num_classes = data_factory.read_data(
-        params.data_dir, 224)
+    train_data, val_data, train_size, val_size, num_classes = data_factory.read_data(params.data_dir, 224)
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -38,7 +37,7 @@ def train_model(params):
     t_ds = t_ds.batch(1)
     t_ds = t_ds.shuffle(1)
     t_ds = t_ds.prefetch(buffer_size=AUTOTUNE)
-
+    
     v_ds = val_data.repeat()
     v_ds = v_ds.batch(1)
     v_ds = v_ds.shuffle(1)
@@ -77,7 +76,7 @@ def train_model(params):
 
     model.fit(t_ds, validation_data=v_ds, epochs=params.epochs,
               steps_per_epoch=params.steps_per_epoch,
-              validation_steps=val_steps, verbose=1,
+              verbose=1, validation_steps=val_steps,
               callbacks=[MyCustomCallback(), e_s, m_c])
 
     # bucket_name = params.model_dir.split('/')[2]
