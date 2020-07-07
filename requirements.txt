@@ -26,7 +26,8 @@ h5py==2.10.0
 idna==2.9
 importlib-metadata==1.6.1
 isort==4.3.21
-Keras==2.4.3
+joblib==0.16.0
+Keras==2.0.9
 Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.2
 lazy-object-proxy==1.4.3
@@ -50,8 +51,10 @@ PyYAML==5.3.1
 requests==2.24.0
 requests-oauthlib==1.3.0
 rsa==4.6
+scikit-learn==0.23.1
 scipy==1.4.1
 six==1.15.0
+sklearn==0.0
 tensorboard==2.2.2
 tensorboard-plugin-wit==1.6.0.post3
 tensorflow==2.2.0
@@ -61,6 +64,7 @@ tensorflow-estimator==2.2.0
 tensorflow-metadata==0.22.2
 tensorflow-model-optimization==0.3.0
 termcolor==1.1.0
+threadpoolctl==2.1.0
 toml==0.10.1
 tqdm==4.46.1
 typed-ast==1.4.1
