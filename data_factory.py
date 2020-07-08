@@ -72,7 +72,7 @@ def read_data(json_data, model_shape):
     classes = set()
     for i in train_data:
         classes.add(i[1])
-    print("Classes",classes)
+    print("Classes", classes)
 
     train_img_ds = tf.data.Dataset.from_tensor_slices((train_data))
     train_img_ds = train_img_ds.map(lambda x: read_jpg(x, model_shape, len(classes)))
