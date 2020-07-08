@@ -31,30 +31,22 @@ def train_model(params):
 
     train_data, val_data, train_size, val_size, num_classes = data_factory.read_data(params.data_dir, 224)
 
-    AUTOTUNE = tf.data.experimental.AUTOTUNE
+    t_ds = train_data.batch(64, drop_remainder=True)
+    t_ds = t_ds.prefetch(buffer_size=20)
 
-    t_ds = train_data.repeat()
-    t_ds = t_ds.batch(1)
-    t_ds = t_ds.shuffle(1)
-    t_ds = t_ds.prefetch(buffer_size=AUTOTUNE)
-    
-    v_ds = val_data.repeat()
-    v_ds = v_ds.batch(1)
-    v_ds = v_ds.shuffle(1)
-    v_ds = v_ds.prefetch(buffer_size=AUTOTUNE)
+    v_ds = val_data.batch(64, drop_remainder=True)
+    v_ds = v_ds.prefetch(buffer_size=20)
+
 
     model_architect = InceptionV3Model((224, 224, 3), num_classes)
     model = model_architect.get_model()
 
     print(model_architect.name)
 
-    tmpdir = tempfile.mkdtemp()
-    export_path = os.path.join(tmpdir, model_architect.name, str(1))
-
-    e_s = EarlyStopping(monitor='categorical_accuracy',
-                        mode='max', verbose=1, patience=5)
-    m_c = ModelCheckpoint(export_path+"/{epoch:02d}", monitor='categorical_accuracy',
-                          mode='max', save_best_only=True, verbose=1)
+    # e_s = EarlyStopping(monitor='categorical_accuracy',
+    #                     mode='max', verbose=1, patience=5)
+    # m_c = ModelCheckpoint(export_path+"/{epoch:02d}", monitor='categorical_accuracy',
+    #                       mode='max', save_best_only=True, verbose=1)
 
     class MyCustomCallback(tf.keras.callbacks.Callback):
         '''Class to return custom callback while training model.
@@ -77,7 +69,7 @@ def train_model(params):
     model.fit(t_ds, validation_data=v_ds, epochs=params.epochs,
               steps_per_epoch=params.steps_per_epoch,
               verbose=1, validation_steps=val_steps,
-              callbacks=[MyCustomCallback(), e_s, m_c])
+              callbacks=[MyCustomCallback()])
 
     # bucket_name = params.model_dir.split('/')[2]
 
