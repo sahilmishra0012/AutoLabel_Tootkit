@@ -50,8 +50,8 @@ class InceptionV3Model:
                                 activation='softmax')(x_layer)
 
         model = Model(inputs=inception.input, outputs=predictions)
-        model.compile(optimizer=SGD(lr=0.0001),
-                      loss='categorical_crossentropy', metrics=['accuracy'])
+        model.compile(optimizer=Adam(lr=0.01),
+                      loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
         logging.info(model.summary())
 
